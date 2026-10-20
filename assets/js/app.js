@@ -2740,7 +2740,7 @@ function goHome(skipAsk){
 /* ===== 버전 체계 =====
    · 관리자에서 정보 수정 후 저장 → 마이너 +0.1
    · 코드 레벨의 큰 개편 → 메이저 +1.0 (APP_VERSION 직접 수정)      */
-let APP_VERSION='2.36.3';
+let APP_VERSION='2.36.1';
 let BUILD_DATE='2026-10-20';
 /* 표시용 버전·빌드일자를 화면에 반영 */
 function paintVersion(){
