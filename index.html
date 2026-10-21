@@ -22,14 +22,14 @@
 <link rel="manifest" href="site.webmanifest">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.css">
-<link rel="stylesheet" href="assets/css/app.css?v=2.36.4">
-<link rel="stylesheet" href="assets/css/admin.css?v=2.36.4">
+<link rel="stylesheet" href="assets/css/app.css?v=2.37.0">
+<link rel="stylesheet" href="assets/css/admin.css?v=2.37.0">
 </head>
 <body>
 
 <header>
   <div class="wrap hd">
-    <a class="hd-logo" href="./" id="hdLogo" onclick="event.preventDefault();goHome()" title="첫 화면으로" aria-label="마크인포 — 첫 화면으로">
+    <a class="hd-logo" href="https://markinfo.kr/" id="hdLogo" onclick="return logoClick(event)" title="마크인포 홈페이지로" aria-label="마크인포 홈페이지로 이동">
       <img id="logoImg" alt="마크인포" src="assets/img/brand/markinfo-logo.webp">
     </a>
     <div class="hd-title" id="hdTitle" role="link" tabindex="0" title="첫 화면으로" onclick="goHome()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();goHome()}">MBCI 테스트</div>
@@ -130,6 +130,9 @@
           <textarea class="af-in" id="heSub" rows="2"></textarea>
           <label class="af-l" style="margin-top:12px">헤더 중앙 문구 <em>모든 화면 상단 중앙에 표시</em></label>
           <input class="af-in" id="heHeaderTitle" maxlength="30" placeholder="MBCI 테스트">
+          <label class="af-l" style="margin-top:12px">마크인포 로고 링크 <em>상단 왼쪽 로고를 누르면 이동하는 마크인포 홈페이지 주소 · 비우면 https://markinfo.kr/</em></label>
+          <input class="af-in" id="heLogoUrl" maxlength="300" placeholder="https://markinfo.kr/" spellcheck="false">
+          <div class="gen-warn hidden" id="heLogoWarn">⚠ https:// 로 시작하는 주소를 입력해 주세요.</div>
 
           <hr class="gen-hr">
           <h3 class="gen-h">CTA</h3>
@@ -598,6 +601,25 @@ ABCDEFG abcdefg 0123456789</textarea>
         </div>
       </div>
 
+      <div class="exp-sec" id="pwSec">
+        <div class="exp-sec-h">관리자 비밀번호 변경</div>
+        <p class="exp-sec-p">새 비밀번호는 <b>「저장하기」로 내보내기를 완료하고, admin-sync 내용물을 관리자 저장소에 올린 뒤</b>부터 적용됩니다. 그 전까지는 지금 비밀번호를 그대로 사용합니다. 비밀번호는 암호화(해시)되어 <code>assets/data/admin-auth.json</code> 에만 저장되며 고객용 파일에는 들어가지 않습니다.</p>
+        <label class="af-l">현재 비밀번호</label>
+        <input class="af-in" id="pwCur" type="password" autocomplete="off" maxlength="64">
+        <div class="exp-grid2">
+          <div><label class="af-l">새 비밀번호 <span>8자 이상 · 영문과 숫자 포함</span></label>
+          <input class="af-in" id="pwNew" type="password" autocomplete="new-password" maxlength="64"></div>
+          <div><label class="af-l">새 비밀번호 확인</label>
+          <input class="af-in" id="pwNew2" type="password" autocomplete="new-password" maxlength="64"></div>
+        </div>
+        <div class="gen-warn hidden" id="pwMsg"></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px">
+          <button type="button" class="chip-btn solid" id="pwStage">비밀번호 변경 준비</button>
+          <button type="button" class="chip-btn hidden" id="pwUnstage">준비한 변경 취소</button>
+          <span class="exp-sec-p" id="pwState" style="margin:0"></span>
+        </div>
+      </div>
+
       <div class="exp-sec">
         <div class="exp-sec-h">내보내기</div>
         <p class="exp-sec-p">한 번에 두 묶음이 만들어집니다. ① customer: 고객용 GitHub 저장소에 올릴 내용물. ② admin-sync: 이 관리자 저장소에 덮어쓸 내용물(편집 내용이 다음 관리자 세션에 이어지게 합니다). 두 곳 모두 zip 자체가 아니라 압축을 푼 내용물을 올립니다.</p>
@@ -638,8 +660,8 @@ ABCDEFG abcdefg 0123456789</textarea>
 
 
 <script>window.MBCI_ADMIN={page:true};</script>
-<script src="assets/data/bsm-data.js?v=2.36.4"></script>
-<script src="assets/js/app.js?v=2.36.4"></script>
-<script src="assets/js/admin.js?v=2.36.4"></script>
+<script src="assets/data/bsm-data.js?v=2.37.0"></script>
+<script src="assets/js/app.js?v=2.37.0"></script>
+<script src="assets/js/admin.js?v=2.37.0"></script>
 </body>
 </html>

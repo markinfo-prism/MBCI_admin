@@ -119,6 +119,13 @@ function applyHomeContent(){
   const hp=document.getElementById('hdPrism');
   if(hp){const u=(m.prismUrl||'').trim()||'https://markinfo.kr/services/45'; hp.hidden=false; hp.href=u;}   // v2.19.0: 우측 버튼은 항상 보인다
   const ht=document.getElementById('hdTitle'); if(ht)ht.textContent=(m.headerTitle||'').trim()||'MBCI 테스트';
+  const lg=document.getElementById('hdLogo'); if(lg){const lu=(m.logoUrl||'').trim(); lg.href=/^https?:\/\/\S+$/i.test(lu)?lu:DEFAULT_LOGO_URL;}   // v2.37.0: 로고 → 마크인포 홈페이지(관리자 일반 탭에서 수정)
+}
+const DEFAULT_LOGO_URL='https://markinfo.kr/';
+/* v2.37.0: 상단 로고는 마크인포 홈페이지로 이동한다. 관리자 화면 안에서만 예전처럼 첫 화면으로 돌아간다 */
+function logoClick(e){
+  if(document.body.classList.contains('admin-mode')){ e.preventDefault(); goHome(); return false; }
+  return true;
 }
 function initBizChips(){
   const box=$('bizChips'); if(!box)return;
@@ -2740,8 +2747,8 @@ function goHome(skipAsk){
 /* ===== 버전 체계 =====
    · 관리자에서 정보 수정 후 저장 → 마이너 +0.1
    · 코드 레벨의 큰 개편 → 메이저 +1.0 (APP_VERSION 직접 수정)      */
-let APP_VERSION='2.36.4';
-let BUILD_DATE='2026-10-20';
+let APP_VERSION='2.37.0';
+let BUILD_DATE='2026-10-21';
 /* 표시용 버전·빌드일자를 화면에 반영 */
 function paintVersion(){
   const v=document.getElementById('verLabel'); if(v)v.textContent='v'+APP_VERSION;

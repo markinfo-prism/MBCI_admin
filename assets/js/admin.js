@@ -653,6 +653,7 @@ function renderAdminHome(){
   $('heHeaderTitle').value=m.headerTitle||'';
   $('heConsultUrl').value=m.consultUrl||'';
   $('hePrismUrl').value=m.prismUrl||'';
+  $('heLogoUrl').value=m.logoUrl||'';
   $('heRecordUrl').value=m.recordUrl||''; $('hePublicUrl').value=m.publicUrl||'';
   // ---- CTA 편집(라벨 문구·메인 문구·이미지 1장·버튼 문구·안내 문구) — 초안(draft)에서 편집하고 「적용」으로 반영
   const draft=JSON.parse(JSON.stringify(ctaCfg()));
@@ -705,7 +706,9 @@ function renderAdminHome(){
   const okUrl=v=>/^https?:\/\/\S+$/i.test(v.trim());
   const warn=(inpId,warnId)=>{const bad=!okUrl($(inpId).value); $(warnId).classList.toggle('hidden',!bad); $(inpId).classList.toggle('af-bad',bad); return !bad;};
   const recOk=()=>{const v=$('heRecordUrl').value.trim(), ok=!v||/^https:\/\/script\.google\.com\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(v); $('heRecordWarn').classList.toggle('hidden',ok); return ok;};
-  const checkUrls=()=>{const a=warn('heConsultUrl','heConsultWarn'), b=warn('hePrismUrl','hePrismWarn'), c=recOk(); return a&&b&&c;};
+  const logoOk=()=>{const v=$('heLogoUrl').value.trim(), ok=!v||okUrl(v); $('heLogoWarn').classList.toggle('hidden',ok); $('heLogoUrl').classList.toggle('af-bad',!ok); return ok;};
+  const checkUrls=()=>{const a=warn('heConsultUrl','heConsultWarn'), b=warn('hePrismUrl','hePrismWarn'), c=recOk(), d=logoOk(); return a&&b&&c&&d;};
+  $('heLogoUrl').oninput=checkUrls;
   $('heConsultUrl').oninput=checkUrls; $('hePrismUrl').oninput=checkUrls; $('heRecordUrl').oninput=checkUrls;
   checkUrls();
   $('heRevert').onclick=()=>{ renderAdminHome(); };
@@ -719,6 +722,7 @@ function renderAdminHome(){
     m.cta=JSON.parse(JSON.stringify(draft)); delete m.cta.steps;   // v2.23.0: 옛 「절차 3단계」는 없어졌다
     m.consultUrl=$('heConsultUrl').value.trim();
     m.prismUrl=$('hePrismUrl').value.trim();
+    m.logoUrl=$('heLogoUrl').value.trim();
     m.recordUrl=$('heRecordUrl').value.trim(); m.publicUrl=$('hePublicUrl').value.trim();
     m.savePng={ref:$('spRef').checked,font:$('spFont').checked,color:$('spColor').checked,mock:$('spMock').disabled?savePartsCfg().mock:$('spMock').checked};
     applyHomeContent();
@@ -728,7 +732,37 @@ function renderAdminHome(){
   };
 }
 const DEFAULT_DESC='간단한 질문으로 내 브랜드의 코어 이미지를 진단하세요';
+/* v2.37.0: 내보내기 탭 — 관리자 비밀번호 변경 */
+function paintPwSection(justExported){
+  const st=$('pwState'), un=$('pwUnstage'); if(!st)return;
+  if(pendingAuth){ st.textContent='새 비밀번호가 준비됨 — 「저장하기」로 내보내고 admin-sync 를 올리면 적용돼요.'; un.classList.remove('hidden'); }
+  else{ st.textContent=justExported?'내보내기를 완료했어요 — zip 의 admin-sync 내용물을 관리자 저장소에 올리면 새 비밀번호가 적용돼요(반영까지 최대 10분).':''; un.classList.add('hidden'); }
+}
+function bindPwSection(){
+  const msg=t=>{const m=$('pwMsg'); m.textContent=t||''; m.classList.toggle('hidden',!t);};
+  $('pwStage').onclick=async()=>{
+    msg('');
+    const cur=$('pwCur').value, n1=$('pwNew').value, n2=$('pwNew2').value;
+    if(!cur||!n1||!n2){msg('현재 비밀번호와 새 비밀번호(2번)를 모두 입력해 주세요.');return;}
+    if(!(window.crypto&&crypto.subtle)){msg('이 브라우저에서는 비밀번호를 암호화할 수 없어요(https 주소에서 열어 주세요).');return;}
+    $('pwStage').disabled=true;
+    try{
+      let ok=false; try{ ok=await checkAdminPw(cur); }catch(e){ msg(e.message); return; }
+      if(!ok){msg('현재 비밀번호가 올바르지 않아요.');return;}
+      if(n1.length<8||!/[A-Za-z]/.test(n1)||!/\d/.test(n1)){msg('새 비밀번호는 8자 이상이고 영문과 숫자를 모두 포함해야 해요.');return;}
+      if(n1!==n2){msg('새 비밀번호 확인이 일치하지 않아요.');return;}
+      if(n1===cur){msg('현재 비밀번호와 다른 비밀번호를 입력해 주세요.');return;}
+      pendingAuth=await makeAuthRecord(n1);
+      try{sessionStorage.setItem('mbciPendingAuth',JSON.stringify(pendingAuth));}catch(e){}
+      ['pwCur','pwNew','pwNew2'].forEach(id=>$(id).value='');
+      markDirty(); paintPwSection(); toast('새 비밀번호를 준비했어요 — 내보내기를 완료해야 적용돼요');
+    } finally { $('pwStage').disabled=false; }
+  };
+  $('pwUnstage').onclick=()=>{ pendingAuth=null; try{sessionStorage.removeItem('mbciPendingAuth');}catch(e){} paintPwSection(); toast('비밀번호 변경을 취소했어요'); };
+  paintPwSection();
+}
 function renderAdminExport(){
+  if($('pwStage')&&!$('pwStage').dataset.b){ $('pwStage').dataset.b='1'; bindPwSection(); } else paintPwSection();
   const t=$('expTitle'); if(t)t.value=SITE_META.title||'MBCI — Markinfo Brand Core Indicator';
   const favImg=$('expFaviconImg'); if(favImg)favImg.src=SITE_META.faviconSrc||DEFAULT_FAVICON;
   const ogImg=$('expOgImg'); if(ogImg)ogImg.src=SITE_META.ogImageSrc||DEFAULT_OG;
@@ -1281,7 +1315,40 @@ function initAdminSelects(){
 /* v2.0.0: 관리자 접근 비밀번호 — 이 사이트는 서버가 없는 정적 배포이므로
    진짜 보안이 아니라 우연한 진입을 막는 1차 방어선이다(코드를 보면 누구나 알 수 있다).
    같은 탭에서는 한 번 확인하면 다시 묻지 않는다(sessionStorage). */
-const ADMIN_PW='prism2026';
+const ADMIN_PW='prism2026';   // 처음 상태의 기본 비밀번호(admin-auth.json 이 없을 때만 쓰인다)
+/* v2.37.0: 비밀번호 변경 — 새 비밀번호는 평문이 아니라 솔트+PBKDF2(SHA-256) 해시로 assets/data/admin-auth.json 에만 저장된다.
+   이 파일은 admin-sync 에만 들어가고 고객용 파일에는 들어가지 않는다. 내보내기를 완료하고 올려야 적용된다. */
+const AUTH_PATH='assets/data/admin-auth.json', AUTH_ITER=150000;
+const b64e=u=>{let s='';u.forEach(c=>s+=String.fromCharCode(c));return btoa(s);};
+const b64d=t=>Uint8Array.from(atob(t),c=>c.charCodeAt(0));
+async function pwHash(pw,salt,iter){
+  const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);
+  return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt,iterations:iter},k,256));
+}
+async function makeAuthRecord(pw){
+  const salt=crypto.getRandomValues(new Uint8Array(16));
+  return {v:1,algo:'PBKDF2-SHA256',iter:AUTH_ITER,salt:b64e(salt),hash:b64e(await pwHash(pw,salt,AUTH_ITER))};
+}
+async function loadAuthRecord(){   // 반환: 레코드 | null(파일 없음 → 기본 비밀번호) | throw(확인 불가)
+  let r;
+  try{ r=await fetch(AUTH_PATH+'?_='+Date.now(),{cache:'no-store'}); }
+  catch(e){ if(location.protocol==='file:')return null; throw new Error('비밀번호 설정을 확인하지 못했어요. 인터넷 연결을 확인하고 다시 시도해 주세요.'); }
+  if(r.status===404)return null;
+  if(!r.ok)throw new Error('비밀번호 설정을 확인하지 못했어요(오류 '+r.status+'). 잠시 후 다시 시도해 주세요.');
+  let j; try{ j=await r.json(); }catch(e){ throw new Error('admin-auth.json 형식이 올바르지 않아요. 파일을 확인해 주세요.'); }
+  if(!j||!j.salt||!j.hash)throw new Error('admin-auth.json 형식이 올바르지 않아요. 파일을 확인해 주세요.');
+  return j;
+}
+async function checkAdminPw(pw){
+  const rec=await loadAuthRecord();
+  if(!rec)return pw===ADMIN_PW;
+  const h=await pwHash(pw,b64d(rec.salt),rec.iter||AUTH_ITER), want=b64d(rec.hash);
+  if(h.length!==want.length)return false;
+  let d=0; for(let i=0;i<h.length;i++)d|=h[i]^want[i];
+  return d===0;
+}
+let pendingAuth=null;   // 이번 세션에서 변경 준비한 새 비밀번호 레코드(내보내기 완료 때 admin-sync 에 담긴다)
+try{ const t=sessionStorage.getItem('mbciPendingAuth'); if(t)pendingAuth=JSON.parse(t); }catch(e){}
 function tryEnterAdmin(){
   const clearHash=()=>{if(location.hash==='#admin')history.replaceState(null,'',location.pathname+location.search);};
   let authed=false;
@@ -1318,15 +1385,19 @@ function openPwModal(onCancel,onSuccess,title,sub){
   m.querySelector('.pw-bg').onclick=()=>close(true);
   const esc=e=>{if(e.key==='Escape'){close(true);document.removeEventListener('keydown',esc);}};
   document.addEventListener('keydown',esc);
-  $('pwForm').onsubmit=e=>{
+  $('pwForm').onsubmit=async e=>{
     e.preventDefault();
-    if(inp.value===ADMIN_PW){
+    const ok=$('pwOk'); ok.disabled=true;
+    let good=false, fail='';
+    try{ good=await checkAdminPw(inp.value); }catch(ex){ fail=ex.message; }
+    ok.disabled=false;
+    if(good){
       try{sessionStorage.setItem('mbciAdminAuth','1');}catch(ex){}
       document.removeEventListener('keydown',esc);
       m.classList.remove('on');
       (onSuccess||enterAdminMode)();
     }else{
-      err.classList.remove('hidden');
+      err.textContent=fail||'비밀번호가 올바르지 않습니다.'; err.classList.remove('hidden');
       inp.value=''; inp.focus();
       inp.classList.add('shake'); setTimeout(()=>inp.classList.remove('shake'),300);
     }
@@ -2532,7 +2603,7 @@ const nextPatch=v=>{const p=String(v).split('.').map(Number);while(p.length<3)p.
 function verifyCustomerBundle(files, obj){
   const errs=[], paths=new Set(Object.keys(files));
   ['index.html','version.json','.nojekyll','site.webmanifest','assets/css/app.css','assets/js/app.js','assets/js/record.js','assets/data/bsm-data.js'].forEach(p=>{ if(!paths.has(p))errs.push('필수 파일 누락: '+p); });
-  paths.forEach(p=>{ if(/(^|\/)(admin|gas|apps-script|export-template)(\/|$)|admin\.(js|css)$|jszip|\.htaccess$|\.zip$|(^|\/)README|\.md$|content-versions|QUESTION_MAP/i.test(p))errs.push('고객용 폴더에 들어가면 안 되는 파일: '+p); });
+  paths.forEach(p=>{ if(/(^|\/)(admin|gas|apps-script|export-template)(\/|$)|admin\.(js|css)$|jszip|\.htaccess$|\.zip$|(^|\/)README|\.md$|content-versions|admin-auth|QUESTION_MAP/i.test(p))errs.push('고객용 폴더에 들어가면 안 되는 파일: '+p); });
   const TOKENS=['prism2026','ADMIN_PW','mbciAdminAuth','adminSec','exportSiteZip','buildExportBundle','openPwModal','gateConsult','enterAdminMode','SHEET_ID','SPREADSHEET_ID','openById','SpreadsheetApp','getSheetById','docs.google.com/spreadsheets','MBCI_ADMIN_PAGE'];
   const SHEETID=/\b1[A-Za-z0-9_-]{43}\b/;
   const dec=new TextDecoder();
@@ -2621,6 +2692,9 @@ async function buildExportBundle(opts){ try{fontmapRestore();}catch(e){}
   /* ---- admin-sync ---- */
   const S={};
   S['assets/data/bsm-data.js']=dataJs; S['version.json']=verJson; S[LEDGER_PATH]=JSON.stringify(ledger,null,1)+'\n';
+  /* v2.37.0: 비밀번호 — 변경을 준비했다면 새 해시를, 아니면 저장소에 있는 기존 파일을 그대로 admin-sync 에 담는다(고객용에는 담지 않는다) */
+  if(pendingAuth){ S[AUTH_PATH]=JSON.stringify(pendingAuth,null,1)+'\n'; }
+  else if(await grab(AUTH_PATH,true,true)){ S[AUTH_PATH]=store[AUTH_PATH]; }
   S['assets/js/app.js']=C['assets/js/app.js'];
   S['index.html']=verQ(store['index.html']); S['export-template/customer-index.html']=verQ(store['export-template/customer-index.html']);
   Object.assign(S,added,replaced);
@@ -2673,6 +2747,7 @@ async function exportSiteZip(){
     a.href=URL.createObjectURL(blob); a.click();
     setTimeout(()=>URL.revokeObjectURL(a.href),8000);
     APP_VERSION=b.version; BUILD_DATE=localDateStr(); paintVersion(); clearDirty();
+    if(pendingAuth){ pendingAuth=null; try{sessionStorage.removeItem('mbciPendingAuth');}catch(e){} paintPwSection(true); }
     toast(`v${b.version} 내보내기 zip 을 내려받았어요 — 압축을 풀어 customer·admin-sync 내용물을 각각 올리세요`);
   }catch(e){
     console.error(e); alert('내보내기 중 오류가 발생해 중단했습니다 (버전은 올리지 않았습니다).\n'+e.message);
