@@ -1743,21 +1743,71 @@ const CTA_DEFAULTS={
   foot:'※ 심층 분석에 따라서 브랜드 코어 및 코어 코드가 일부 달라질 수 있습니다.',
   copyNote:'버튼을 누르면 결과 요약이 자동으로 복사돼요. 상담·문의할 때 붙여 넣어 주세요.',
   consultLabel:'심층 분석 상담하기', prismLabel:'프리즘 로고제작 알아보기',
+  /* v2.38.0: 이메일 남기기 */
+  emailChip:'이메일 알림 서비스', emailLabel:'심층 분석·프리즘 소식을\n이메일로 받아보세요', emailPlaceholder:'이메일 주소를 입력해 주세요', emailBtn:'이메일 남기기',
+  emailAgree:'[필수] 이메일 수집·이용 동의', emailAd:'[선택] 광고성 이메일 수신 동의',
+  emailNote:'※ 필수 동의는 이메일 알림 신청에만 해당하며, 동의하지 않아도 MBCI 테스트와 결과 확인은 이용할 수 있습니다.',
+  emailAdNote:'※ 프리즘 상품 홍보·할인·이벤트 등 광고성 이메일은 별도의 수신 동의가 있는 경우에만 발송합니다.',
+  emailDetail:'이메일 수집·이용 안내\n* 수집 항목: 이메일 주소\n* 이용 목적: 신청한 심층 상담 관련 이메일 안내\n* 보유·이용 기간: 동의 철회 또는 알림 서비스 해지 시까지\n* 동의 거부 안내: 동의를 거부할 수 있으나, 거부 시 이메일 알림 신청이 제한됩니다. MBCI 테스트와 결과 확인은 동의 여부와 관계없이 이용할 수 있습니다.',
+  emailDone:'이메일을 남겨 주셔서 감사해요', emailDoneSub:'프리즘 소식과 심층 상담 안내를 보내 드릴게요.',
   saveLabel:'결과 이미지 저장하기', saveNote:'※ 상담·문의 시 결과 이미지를 보여주시면 원활하게 진행할 수 있습니다.',
   /* v2.24.0: 「절차 3단계」 이미지(가로 1080px) — 관리자에서 이미지를 따로 지정하지 않았을 때만 쓰는 기본 이미지 */
   image:{src:'assets/img/cta/steps-default.png',alt:'절차 3단계 — 01 발견·브랜드 성향 확인, 02 해석·브랜드 코어 심층 분석, 03 적용·맞춤 로고 디자인'}
 };
+const CTA_OLD_EM={emailChip:'프리즘 소식 · 상담 안내',emailAgree:'프리즘 소식·심층 상담 안내 수신을 위한 이메일 수집·이용에 동의합니다.',emailDetail:'수집 항목: 이메일 주소 · 이용 목적: 프리즘 소식 및 심층 상담 안내 발송 · 보유 기간: 동의 철회(수신 거부 요청) 시까지. 동의하지 않아도 테스트 결과는 그대로 이용할 수 있어요.'};   // v2.38.3: 2.38.0~2.38.2 의 옛 기본 문구는 저장돼 있어도 새 기본 문구로 바꿔 쓴다
 function ctaCfg(over){
   const c=over||SITE_META.cta||{}, d=CTA_DEFAULTS;
-  const pick=k=>(typeof c[k]==='string'&&c[k].trim())?c[k]:d[k];
+  const pick=k=>(typeof c[k]==='string'&&c[k].trim()&&c[k]!==CTA_OLD_EM[k])?c[k]:d[k];
   const im=(c.image===undefined||c.image===null)?d.image:c.image;   // 이미지 항목이 아예 없을 때만 기본 이미지(절차 3단계)
-  return {chip:pick('chip'),head:pick('head'),image:{src:(typeof im.src==='string'?im.src:''),alt:(typeof im.alt==='string'?im.alt:'')},foot:pick('foot'),copyNote:pick('copyNote'),consultLabel:pick('consultLabel'),prismLabel:pick('prismLabel'),saveLabel:pick('saveLabel'),saveNote:pick('saveNote')};
+  return {chip:pick('chip'),head:pick('head'),image:{src:(typeof im.src==='string'?im.src:''),alt:(typeof im.alt==='string'?im.alt:'')},foot:pick('foot'),copyNote:pick('copyNote'),consultLabel:pick('consultLabel'),prismLabel:pick('prismLabel'),saveLabel:pick('saveLabel'),saveNote:pick('saveNote'),emailChip:pick('emailChip'),emailLabel:pick('emailLabel'),emailPlaceholder:pick('emailPlaceholder'),emailBtn:pick('emailBtn'),emailAgree:pick('emailAgree'),emailAd:pick('emailAd'),emailNote:pick('emailNote'),emailAdNote:pick('emailAdNote'),emailDetail:pick('emailDetail'),emailDone:pick('emailDone'),emailDoneSub:pick('emailDoneSub')};
 }
 function ctaSaveHTML(c,preview){
   return `<div class="save-wrap">
         <button type="button" class="cta-save"${preview?' tabindex="-1"':' id="mbDownload"'}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 20h16"/></svg>${esc(c.saveLabel)}</button>
         <p class="cta-save-note">${esc(c.saveNote)}</p>
       </div>`;
+}
+/* 줄바꿈 → 줄, 첫 줄은 굵게(안내문 제목) */
+function emLines(t){ const l=String(t||'').split('\n'); return `<b>${esc(l[0])}</b>`+l.slice(1).map(esc).join('<br>'); }
+function ctaEmailHTML(c,preview){
+  const ti=preview?' tabindex="-1"':'', id=n=>preview?'':` id="${n}"`;
+  /* v2.38.2: CTA 카드 안이 아니라 카드 아래의 별도 섹션(흰 배경) */
+  return `<section class="em-sec"${preview?'':' id="emSec"'}>
+        <span class="em-chip">${esc(c.emailChip)}</span>
+        <h3 class="em-title">${esc(c.emailLabel).replace(/\n/g,'<br>')}</h3>
+        <div class="em-box"${id('emBox')} data-state="idle">
+          <input class="em-in"${id('emIn')} type="email" inputmode="email" autocomplete="email" maxlength="100" placeholder="${esc(c.emailPlaceholder)}" aria-label="${esc(c.emailPlaceholder)}" spellcheck="false"${ti}${preview?' readonly':''}>
+          <p class="em-msg"${id('emMsg')} role="status" aria-live="polite"></p>
+          <label class="em-agree"><input type="checkbox"${id('emAg')}${ti}><span>${esc(c.emailAgree)} <button type="button" class="em-more"${id('emMore')} aria-expanded="false"${ti}>자세히</button></span></label>
+          <div class="em-detail hidden"${id('emDetail')}>${emLines(c.emailDetail)}${c.emailAdNote?`<p class="em-adnote">${esc(c.emailAdNote)}</p>`:''}</div>
+          <label class="em-agree"><input type="checkbox"${id('emAd')}${ti}><span>${esc(c.emailAd)}</span></label>
+          <p class="em-note">${esc(c.emailNote)}</p>
+          <button type="button" class="cta-save em-btn"${id('emBtn')}${ti}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7.5l8.5 6 8.5-6"/></svg><span${id('emBtnT')}>${esc(c.emailBtn)}</span></button>
+          <div class="em-done hidden"${id('emDone')}><b>✓ ${esc(c.emailDone)}</b><span>${esc(c.emailDoneSub)}</span></div>
+        </div>
+      </section>`;
+}
+function bindEmailBox(){
+  const box=$('emBox'); if(!box)return;
+  const c=ctaCfg(), inp=$('emIn'), ag=$('emAg'), ad=$('emAd'), btn=$('emBtn'), msg=$('emMsg'), det=$('emDetail'), more=$('emMore'), bt=$('emBtnT');
+  const say=(t,bad)=>{msg.textContent=t||'';box.classList.toggle('bad',!!bad);};
+  more.onclick=()=>{const o=det.classList.toggle('hidden');more.setAttribute('aria-expanded',o?'false':'true');};
+  inp.oninput=()=>say('');
+  ag.onchange=()=>say('');
+  let busy=false;
+  btn.onclick=async()=>{
+    if(busy)return;
+    const em=inp.value.trim();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)||em.length>100){say('이메일 주소 형식을 확인해 주세요.',true);inp.focus();return;}
+    if(!ag.checked){say('[필수] 이메일 수집·이용 동의에 체크해 주세요.',true);return;}
+    busy=true; btn.disabled=true; bt.textContent='보내는 중…'; say('');
+    let st='failed';
+    try{ st=await window.MBCI_RECORD.sendEmail({email:em,core_id:(viewingCode||(mbciResult&&mbciResult.resultCode)||''),consent:true,ad_consent:!!ad.checked}); }catch(e){}
+    busy=false; btn.disabled=false; bt.textContent=c.emailBtn;
+    if(st==='confirmed'||st==='unconfirmed'){ box.dataset.state='done'; $('emDone').classList.remove('hidden'); }
+    else if(st==='skipped'){ say('테스트 환경이라 실제로는 전송하지 않았어요.'); }
+    else say(st==='rejected'?'이메일을 확인해 주세요. 계속 안 되면 잠시 후 다시 시도해 주세요.':'전송에 실패했어요. 잠시 후 다시 시도해 주세요.',true);
+  };
 }
 function ctaCardHTML(c,preview){
   const br=t=>esc(t).replace(/\n/g,'<br>');
@@ -1923,6 +1973,8 @@ function renderStyle(){
       ${ctaSaveHTML(ctaCfg())}
 
       ${ctaCardHTML(ctaCfg())}
+
+      ${ctaEmailHTML(ctaCfg())}
 
       <div class="sec sec-others">
         <div class="sec-head"><span class="sec-title">다른 코어 보기</span><span class="sec-easy">다른 코어도 확인해볼 수 있어요</span></div>
@@ -2477,6 +2529,7 @@ function closeTuner(){
 /* ---------- result events ---------- */
 function bindResultEvents(){
   const dlBtn=$('mbDownload'); if(dlBtn)dlBtn.onclick=exportResultPNG;
+  bindEmailBox();
   document.querySelectorAll('.mb-other-cell').forEach(b=>b.onclick=()=>{
     viewingCode=b.dataset.core;
     renderBrandCoreResult(viewingCode, viewingCode);
@@ -2747,8 +2800,8 @@ function goHome(skipAsk){
 /* ===== 버전 체계 =====
    · 관리자에서 정보 수정 후 저장 → 마이너 +0.1
    · 코드 레벨의 큰 개편 → 메이저 +1.0 (APP_VERSION 직접 수정)      */
-let APP_VERSION='2.37.0';
-let BUILD_DATE='2026-10-21';
+let APP_VERSION='2.38.3';
+let BUILD_DATE='2026-10-29';
 /* 표시용 버전·빌드일자를 화면에 반영 */
 function paintVersion(){
   const v=document.getElementById('verLabel'); if(v)v.textContent='v'+APP_VERSION;

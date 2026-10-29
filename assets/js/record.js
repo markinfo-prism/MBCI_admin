@@ -116,6 +116,16 @@
     send(p,0);                                  // 결과 화면을 기다리게 하지 않는다
     return 'sent';
   };
+  /* v2.38.0: 이메일 남기기 — 결과 기록과 같은 주소로 보내되 type:'email'로 구분한다. 큐에 쌓지 않는다(실패하면 고객이 다시 누른다). */
+  api.sendEmail=async function(d){
+    const why=skipReason(); if(why){console.info('[MBCI email] 전송 안 함 —',why);return 'skipped';}
+    const url=endpoint(); if(!url)return 'skipped';
+    const em=clean(d.email,100).toLowerCase();
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)||d.consent!==true)return 'rejected';
+    let ver=''; try{ ver=String(APP_VERSION||''); }catch(e){}
+    const p={type:'email',v:1,submission_id:uuid(),email:em,core_id:clean(d.core_id,20),result_id:(attempt&&attempt.id)||'',consent:true,ad_consent:d.ad_consent===true,app_version:ver,website:''};
+    return post(url,p);
+  };
   window.addEventListener('online',()=>{flush();});
   setTimeout(flush,4000);
 })();

@@ -657,12 +657,14 @@ function renderAdminHome(){
   $('heRecordUrl').value=m.recordUrl||''; $('hePublicUrl').value=m.publicUrl||'';
   // ---- CTA 편집(라벨 문구·메인 문구·이미지 1장·버튼 문구·안내 문구) — 초안(draft)에서 편집하고 「적용」으로 반영
   const draft=JSON.parse(JSON.stringify(ctaCfg()));
+  const EM_F=[['emailChip','heEmChip'],['emailLabel','heEmLabel'],['emailPlaceholder','heEmPh'],['emailBtn','heEmBtn'],['emailAgree','heEmAgree'],['emailAd','heEmAd'],['emailNote','heEmNote'],['emailAdNote','heEmAdNote'],['emailDetail','heEmDetail'],['emailDone','heEmDone'],['emailDoneSub','heEmDoneSub']];
   const imgBox=$('heCtaImg');
   const ctaPaint=()=>{
     draft.head=$('heCtaHead').value; draft.chip=$('heCtaChip').value; draft.foot=$('heCtaFoot').value; draft.copyNote=$('heCtaCopy').value;
     draft.saveNote=$('heCtaSaveNote').value; draft.consultLabel=$('heCtaConsultLbl').value; draft.prismLabel=$('heCtaPrismLbl').value; draft.saveLabel=$('heCtaSaveLbl').value;
-    $('heCtaPvNew').innerHTML=ctaSaveHTML(ctaCfg(draft),true)+ctaCardHTML(ctaCfg(draft),true);
-    $('heCtaPvOld').innerHTML=ctaSaveHTML(ctaCfg(),true)+ctaCardHTML(ctaCfg(),true);
+    EM_F.forEach(([k,id])=>{draft[k]=$(id).value;});
+    $('heCtaPvNew').innerHTML=ctaSaveHTML(ctaCfg(draft),true)+ctaCardHTML(ctaCfg(draft),true)+ctaEmailHTML(ctaCfg(draft),true);
+    $('heCtaPvOld').innerHTML=ctaSaveHTML(ctaCfg(),true)+ctaCardHTML(ctaCfg(),true)+ctaEmailHTML(ctaCfg(),true);
   };
   const imgDraw=()=>{
     const im=draft.image||(draft.image={src:'',alt:''});
@@ -689,6 +691,7 @@ function renderAdminHome(){
   $('heCtaHead').value=draft.head; $('heCtaChip').value=draft.chip; $('heCtaFoot').value=draft.foot; $('heCtaCopy').value=draft.copyNote;
   $('heCtaSaveNote').value=draft.saveNote; $('heCtaConsultLbl').value=draft.consultLabel; $('heCtaPrismLbl').value=draft.prismLabel; $('heCtaSaveLbl').value=draft.saveLabel;
   ['heCtaHead','heCtaChip','heCtaFoot','heCtaCopy','heCtaSaveNote','heCtaConsultLbl','heCtaPrismLbl','heCtaSaveLbl'].forEach(id=>$(id).oninput=ctaPaint);
+  EM_F.forEach(([k,id])=>{$(id).value=draft[k];$(id).oninput=ctaPaint;});
   imgDraw(); ctaPaint();
   const sp=savePartsCfg(), showMock=!!(MBCI.settings&&MBCI.settings.showMockup);
   $('spRef').checked=sp.ref; $('spFont').checked=sp.font; $('spColor').checked=sp.color;
@@ -2597,6 +2600,8 @@ const CUSTOMER_STATIC=['site.webmanifest','assets/css/app.css','assets/js/app.js
 /* v2.32.2: 관리자 저장소에 site.webmanifest 를 올리지 않았어도 내보내기가 멈추지 않도록 같은 내용의 기본값을 내장한다 */
 const DEFAULT_MANIFEST="{\n  \"name\": \"MBCI — Markinfo Brand Core Indicator\",\n  \"short_name\": \"MBCI\",\n  \"description\": \"간단한 질문으로 내 브랜드의 코어 이미지를 진단하세요 — 마크인포\",\n  \"start_url\": \"./\",\n  \"display\": \"standalone\",\n  \"background_color\": \"#F4F8F6\",\n  \"theme_color\": \"#12B97E\",\n  \"icons\": [\n    {\n      \"src\": \"assets/img/brand/favicon-192.png\",\n      \"sizes\": \"192x192\",\n      \"type\": \"image/png\"\n    },\n    {\n      \"src\": \"assets/img/brand/favicon-512.png\",\n      \"sizes\": \"512x512\",\n      \"type\": \"image/png\",\n      \"purpose\": \"any maskable\"\n    }\n  ]\n}";
 const CUSTOMER_BRAND_IMGS=['assets/img/brand/markinfo-logo.webp','assets/img/brand/favicon.ico','assets/img/brand/favicon-16.png','assets/img/brand/favicon-32.png','assets/img/brand/favicon-48.png','assets/img/brand/favicon-180.png','assets/img/brand/favicon-192.png','assets/img/brand/favicon-512.png','assets/img/brand/apple-touch-icon.png','assets/img/og/default.png','assets/img/questions/placeholder.webp','assets/img/cta/steps-default.png'];
+/* v2.38.1: 관리자 실행에 꼭 필요한 파일(고객용에는 담지 않는다) */
+const ADMIN_CORE=['assets/css/admin.css','assets/js/admin.js','assets/js/jszip.min.js'];
 const LEDGER_PATH='assets/data/content-versions.json', LEDGER_KEEP=20;
 const nextPatch=v=>{const p=String(v).split('.').map(Number);while(p.length<3)p.push(0);p[2]++;return p.join('.');};
 /* 검사 — 문제가 있으면 목록을 돌려준다(빈 배열이면 통과) */
@@ -2696,6 +2701,11 @@ async function buildExportBundle(opts){ try{fontmapRestore();}catch(e){}
   if(pendingAuth){ S[AUTH_PATH]=JSON.stringify(pendingAuth,null,1)+'\n'; }
   else if(await grab(AUTH_PATH,true,true)){ S[AUTH_PATH]=store[AUTH_PATH]; }
   S['assets/js/app.js']=C['assets/js/app.js'];
+  /* v2.38.1: admin-sync 만 올려도 관리자가 완결되도록 관리자 실행에 필요한 파일을 모두 담는다(스타일·스크립트·로고·.nojekyll).
+     예전에는 데이터·app.js·index.html 만 담겨서, 저장소에 CSS 등이 빠져 있으면 화면이 깨졌다. */
+  for(const rel of ADMIN_CORE){ if(!await grab(rel,rel.endsWith('.js')||rel.endsWith('.css')||rel.endsWith('.webmanifest')))return {errs:[`${rel} 을(를) 불러오지 못했습니다 — 관리자 폴더에 이 파일이 있는지 확인해 주세요`]}; S[rel]=store[rel]; }
+  S['assets/js/record.js']=C['assets/js/record.js']; S['assets/css/app.css']=C['assets/css/app.css']; S['site.webmanifest']=C['site.webmanifest']; S['.nojekyll']='';
+  CUSTOMER_BRAND_IMGS.forEach(r=>{ if(C[r])S[r]=C[r]; });
   S['index.html']=verQ(store['index.html']); S['export-template/customer-index.html']=verQ(store['export-template/customer-index.html']);
   Object.assign(S,added,replaced);
   /* ---- 지원 파일 ---- */
@@ -2703,10 +2713,10 @@ async function buildExportBundle(opts){ try{fontmapRestore();}catch(e){}
   X['apps-script/QUESTION_MAP.txt']=questionMapText(ledger)+'\n';
   X['읽어주세요.txt']=`MBCI 내보내기 v${newVer}  (${today})  질문 구성 ${cv}\n\n`+
 `1) customer 폴더의 "내용물"을 고객용 GitHub 저장소에 올립니다. (이 zip 이나 customer 폴더 자체를 올리지 마세요)\n`+
-`2) admin-sync 폴더의 "내용물"을 관리자 GitHub 저장소에 덮어씁니다. (그래야 다음에 관리자를 열 때 방금 편집한 상태에서 이어집니다)\n`+
+`2) admin-sync 폴더의 "내용물"을 관리자 GitHub 저장소에 덮어씁니다. (v2.38.1부터 스타일·스크립트·로고까지 모두 들어 있어, 이 내용물만 올려도 관리자가 완결됩니다)\n`+
 `3) apps-script/QUESTION_MAP.txt 는 선택 사항입니다. 질문·선택지를 바꿨다면, 수신 코드(Apps Script)의 스크립트 속성 QUESTION_MAP 값을 이 파일 내용으로 교체하면 서버가 점수를 다시 검산합니다.\n`+
 `자세한 순서는 docs 폴더의 설명서를 보세요.\n`;
-  const errs=verifyCustomerBundle(C,obj).concat(failed.map(f=>'가져오지 못한 파일: '+f));
+  const errs=verifyCustomerBundle(C,obj).concat(['index.html','version.json','.nojekyll','assets/css/app.css','assets/css/admin.css','assets/js/app.js','assets/js/admin.js','assets/js/record.js','assets/js/jszip.min.js','assets/data/bsm-data.js','export-template/customer-index.html'].filter(r=>!(r in S)).map(r=>'관리자 저장본(admin-sync)에 필수 파일이 빠짐: '+r)).concat(failed.map(f=>'가져오지 못한 파일: '+f));
   Object.keys(added).forEach(p=>{ if(!(p in S))errs.push('관리자 저장본에 새 이미지가 빠짐: '+p); });
   return {errs, version:newVer, contentVersion:cv, obj, customer:C, adminSync:S, extra:X};
 }

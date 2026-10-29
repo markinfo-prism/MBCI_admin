@@ -1460,3 +1460,41 @@ body.shared-core #app.res-enter .sc-body>*:nth-child(n+4){animation-delay:1s}
   body.mbci-test-mode #qStage:not(:has(.mb-qimg)) .qno{margin-top:clamp(32px,9vh,96px)}
   body.mbci-test-mode #qWrap #qStage:not(:has(.mb-qimg)) .qtext{padding-bottom:52px}
 }
+
+/* ================= v2.38.0 이메일 남기기 ================= */
+.em-box{display:flex;flex-direction:column;gap:10px;margin:4px 0 2px;padding:16px 16px 14px;border-radius:18px;background:#fff;border:2px solid var(--cta-accent)}
+.em-lab{font-size:13.5px;font-weight:800;color:#1F1F1F;text-align:center;line-height:1.5}
+.em-in{width:100%;box-sizing:border-box;padding:15px 16px;border:2px solid var(--line);border-radius:14px;font-size:15px;font-weight:700;font-family:inherit;color:#1F1F1F;background:#fff;text-align:center;transition:border-color .15s,box-shadow .15s}
+.em-in::placeholder{font-weight:400;color:var(--ink3)}
+.em-in:focus{outline:none;border-color:#333;box-shadow:0 0 0 3px #DBFFFF}
+.em-box.bad .em-in{border-color:#C0392B}
+.em-msg{min-height:0;margin:-2px 2px 0;font-size:12px;line-height:1.5;text-align:center;color:#C0392B}
+.em-msg:empty{display:none}
+.em-agree{display:flex;gap:8px;align-items:flex-start;font-size:11.5px;line-height:1.55;color:#4A5A66;cursor:pointer}
+.em-agree input{flex:none;width:18px;height:18px;margin:1px 0 0;accent-color:#333}
+.em-more{border:0;background:none;padding:0;font:inherit;color:#1F1F1F;text-decoration:underline;cursor:pointer}
+.em-detail{margin:-2px 2px 0;padding:10px 12px;border-radius:12px;background:#F0FFFF;font-size:11px;line-height:1.6;color:#4A5A66}
+.hidden{display:none!important}
+.em-btn{margin:0}
+.em-btn[disabled]{opacity:.55;cursor:default}
+.em-box[data-state="sending"] .em-btn{opacity:.7}
+.em-done{display:flex;flex-direction:column;gap:4px;align-items:center;text-align:center;padding:10px 6px;font-size:12.5px;color:#4A5A66;line-height:1.55}
+.em-done b{font-size:15px;color:#1F1F1F}
+.em-box[data-state="done"]{background:#F0FFFF}
+.em-box[data-state="done"] .em-lab,.em-box[data-state="done"] .em-in,.em-box[data-state="done"] .em-agree,.em-box[data-state="done"] .em-detail,.em-box[data-state="done"] .em-btn,.em-box[data-state="done"] .em-msg{display:none!important}
+.em-box[data-state="done"] .em-done{display:flex!important}
+.em-box .hidden{display:none}
+
+/* ================= v2.38.2 이메일 남기기 — CTA 카드 아래 별도 섹션(흰 배경) ================= */
+.em-sec{display:flex;flex-direction:column;align-items:center;gap:8px;margin:6px 0 0;padding:26px 18px 20px;border-radius:24px;background:#fff;border:2px solid var(--cta-accent);text-align:center}
+.em-chip{display:inline-block;padding:5px 12px;border-radius:100px;background:#333;color:var(--cta-color);font-size:11px;font-weight:800;letter-spacing:.02em}
+.em-title{margin:4px 0 6px;font-size:19px;line-height:1.4;font-weight:800;color:#1F1F1F}
+.em-sec .em-box{align-self:stretch;margin:0;padding:0;border:0;background:transparent;text-align:left}
+.em-sec .em-box[data-state="done"]{background:transparent}
+
+/* ================= v2.38.3 이메일 동의 2종(필수·선택) ================= */
+.em-sec .em-agree{align-items:center;font-size:12.5px;color:#1F1F1F}
+.em-sec .em-agree+.em-detail{margin-top:-2px}
+.em-detail b{display:block;margin-bottom:4px;color:#1F1F1F}
+.em-detail .em-adnote{margin:8px 0 0;padding-top:8px;border-top:1px solid #D5EEEE}
+.em-note{margin:0 2px;font-size:11px;line-height:1.6;color:#4A5A66}
