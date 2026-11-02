@@ -1282,6 +1282,11 @@ function finishQ(){
   document.body.classList.remove('mbci-test-mode');   // 결과 화면은 다시 2단 레이아웃(게이지+결과)으로
   renderMbciResult();
   resEnter();   // v2.24.0: 결과가 처음 표시될 때만 은은한 등장 모션
+  /* GTM - MBCI 테스트 완료 이벤트 (v2.39.0: 내보내기·업데이트에서도 이 코드는 고정으로 유지된다 — 지우거나 옮기면 내보내기 검사가 막는다) */
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    event: 'mbci_test_complete'
+  });
   /* v2.21.0: 20문항을 모두 답해 결과가 확정된 이 지점에서만 1회 기록한다(관리자·상담·다른 코어 보기는 이 함수를 거치지 않는다) */
   try{ if(window.MBCI_RECORD)window.MBCI_RECORD.onComplete({answers:qAns,result:mbciResult,brand:brandName,biz:(bizCode||(bizEtc?'etc':null))}); }catch(e){ console.warn('[record]',e); }
 }
@@ -1744,17 +1749,17 @@ const CTA_DEFAULTS={
   copyNote:'버튼을 누르면 결과 요약이 자동으로 복사돼요. 상담·문의할 때 붙여 넣어 주세요.',
   consultLabel:'심층 분석 상담하기', prismLabel:'프리즘 로고제작 알아보기',
   /* v2.38.0: 이메일 남기기 */
-  emailChip:'이메일 알림 서비스', emailLabel:'심층 분석·프리즘 소식을\n이메일로 받아보세요', emailPlaceholder:'이메일 주소를 입력해 주세요', emailBtn:'이메일 남기기',
+  emailChip:'이메일 알림 서비스', emailLabel:'심층 분석 & 프리즘 소식을\n이메일로 받아보세요', emailPlaceholder:'이메일 주소를 입력해 주세요', emailBtn:'이메일 남기기',
   emailAgree:'[필수] 이메일 수집·이용 동의', emailAd:'[선택] 광고성 이메일 수신 동의',
-  emailNote:'※ 필수 동의는 이메일 알림 신청에만 해당하며, 동의하지 않아도 MBCI 테스트와 결과 확인은 이용할 수 있습니다.',
+  emailNote:'※ 필수 동의는 이메일 알림 신청에만 해당하며, 이메일 주소를 남겨주시면 담당자가 테스트 결과를 분석 후 이메일로 안내드립니다.',
   emailAdNote:'※ 프리즘 상품 홍보·할인·이벤트 등 광고성 이메일은 별도의 수신 동의가 있는 경우에만 발송합니다.',
   emailDetail:'이메일 수집·이용 안내\n* 수집 항목: 이메일 주소\n* 이용 목적: 신청한 심층 상담 관련 이메일 안내\n* 보유·이용 기간: 동의 철회 또는 알림 서비스 해지 시까지\n* 동의 거부 안내: 동의를 거부할 수 있으나, 거부 시 이메일 알림 신청이 제한됩니다. MBCI 테스트와 결과 확인은 동의 여부와 관계없이 이용할 수 있습니다.',
-  emailDone:'이메일을 남겨 주셔서 감사해요', emailDoneSub:'프리즘 소식과 심층 상담 안내를 보내 드릴게요.',
+  emailDone:'이메일을 남겨주셔서 감사합니다', emailDoneSub:'담당자가 확인 후 메일을 보내드리겠습니다.',
   saveLabel:'결과 이미지 저장하기', saveNote:'※ 상담·문의 시 결과 이미지를 보여주시면 원활하게 진행할 수 있습니다.',
   /* v2.24.0: 「절차 3단계」 이미지(가로 1080px) — 관리자에서 이미지를 따로 지정하지 않았을 때만 쓰는 기본 이미지 */
   image:{src:'assets/img/cta/steps-default.png',alt:'절차 3단계 — 01 발견·브랜드 성향 확인, 02 해석·브랜드 코어 심층 분석, 03 적용·맞춤 로고 디자인'}
 };
-const CTA_OLD_EM={emailChip:'프리즘 소식 · 상담 안내',emailAgree:'프리즘 소식·심층 상담 안내 수신을 위한 이메일 수집·이용에 동의합니다.',emailDetail:'수집 항목: 이메일 주소 · 이용 목적: 프리즘 소식 및 심층 상담 안내 발송 · 보유 기간: 동의 철회(수신 거부 요청) 시까지. 동의하지 않아도 테스트 결과는 그대로 이용할 수 있어요.'};   // v2.38.3: 2.38.0~2.38.2 의 옛 기본 문구는 저장돼 있어도 새 기본 문구로 바꿔 쓴다
+const CTA_OLD_EM={emailChip:'프리즘 소식 · 상담 안내',emailAgree:'프리즘 소식·심층 상담 안내 수신을 위한 이메일 수집·이용에 동의합니다.',emailDetail:'수집 항목: 이메일 주소 · 이용 목적: 프리즘 소식 및 심층 상담 안내 발송 · 보유 기간: 동의 철회(수신 거부 요청) 시까지. 동의하지 않아도 테스트 결과는 그대로 이용할 수 있어요.',emailLabel:'심층 분석·프리즘 소식을\n이메일로 받아보세요',emailNote:'※ 필수 동의는 이메일 알림 신청에만 해당하며, 동의하지 않아도 MBCI 테스트와 결과 확인은 이용할 수 있습니다.',emailDone:'이메일을 남겨 주셔서 감사해요',emailDoneSub:'프리즘 소식과 심층 상담 안내를 보내 드릴게요.'};   // v2.38.3: 2.38.0~2.38.2 의 옛 기본 문구는 저장돼 있어도 새 기본 문구로 바꿔 쓴다
 function ctaCfg(over){
   const c=over||SITE_META.cta||{}, d=CTA_DEFAULTS;
   const pick=k=>(typeof c[k]==='string'&&c[k].trim()&&c[k]!==CTA_OLD_EM[k])?c[k]:d[k];
@@ -1783,7 +1788,7 @@ function ctaEmailHTML(c,preview){
           <label class="em-agree"><input type="checkbox"${id('emAd')}${ti}><span>${esc(c.emailAd)}</span></label>
           <p class="em-note">${esc(c.emailNote)}</p>
           <button type="button" class="cta-save em-btn"${id('emBtn')}${ti}><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="M3.5 7.5l8.5 6 8.5-6"/></svg><span${id('emBtnT')}>${esc(c.emailBtn)}</span></button>
-          <div class="em-done hidden"${id('emDone')}><b>✓ ${esc(c.emailDone)}</b><span>${esc(c.emailDoneSub)}</span></div>
+          <div class="em-done hidden"${id('emDone')}><b>✔ ${esc(c.emailDone)}</b><span>${esc(c.emailDoneSub)}</span></div>
         </div>
       </section>`;
 }
@@ -2800,8 +2805,8 @@ function goHome(skipAsk){
 /* ===== 버전 체계 =====
    · 관리자에서 정보 수정 후 저장 → 마이너 +0.1
    · 코드 레벨의 큰 개편 → 메이저 +1.0 (APP_VERSION 직접 수정)      */
-let APP_VERSION='2.38.4';
-let BUILD_DATE='2026-10-29';
+let APP_VERSION='2.40.0';
+let BUILD_DATE='2026-11-02';
 /* 표시용 버전·빌드일자를 화면에 반영 */
 function paintVersion(){
   const v=document.getElementById('verLabel'); if(v)v.textContent='v'+APP_VERSION;

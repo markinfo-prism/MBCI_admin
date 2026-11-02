@@ -2619,6 +2619,10 @@ function verifyCustomerBundle(files, obj){
     if(SHEETID.test(t.replace(/data:[a-z]+\/[\w.+-]+;base64,[A-Za-z0-9+\/=]+/gi,'')))errs.push('구글 시트/파일 ID로 보이는 문자열 발견: '+p);
     if(p==='index.html'&&/(admin|jszip)/i.test(t.replace(/<!--[\s\S]*?-->/g,'')))errs.push('index.html 에 관리자 관련 문구가 있습니다');
   });
+  /* v2.39.0: GTM 고정 추적 코드 — 고객용 index.html 과 app.js 에 반드시 들어 있어야 한다 */
+  { const ih=typeof files['index.html']==='string'?files['index.html']:''; const aj=typeof files['assets/js/app.js']==='string'?files['assets/js/app.js']:'';
+    if(!/googletagmanager\.com\/gtm\.js\?id=GTM-KV8VKV59/.test(ih)||!/gtag\('js',\s*new Date\(\)\)/.test(ih))errs.push('고정 추적 코드(GTM) 누락: 고객용 index.html — export-template/customer-index.html 에 GTM 블록이 있어야 합니다');
+    if(!/dataLayer\.push\(\{\s*event:\s*'mbci_test_complete'\s*\}\)/.test(aj))errs.push("고정 추적 코드 누락: assets/js/app.js 의 dataLayer.push({event:'mbci_test_complete'})"); }
   const need=new Set(); const add=u=>{ if(u&&typeof u==='string'&&!u.startsWith('data:')&&!/^(https?:)?\/\//i.test(u))need.add(u.split('?')[0]); };
   Object.values(obj.MOCKUP_IMGS||{}).forEach(v=>{add(v.src);(v.layers||[]).forEach(add);});
   (obj.MBCI_TEST.questions||[]).forEach(q=>{ if(q.active!==false)add(q.image&&q.image.src); });
